@@ -17,9 +17,9 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Builds the widget for ANY size: every text size is calculated from the widget's current
- * width/height, so you can drag the resize handles freely. Hours:minutes:seconds is a system
- * Chronometer, so it ticks live every second. Months/days refresh once a day.
+ * Builds the widget for ANY size: text sizes come from the widget's current width/height, scaled by
+ * your "text size" setting, and the text block is placed by your "text position" setting.
+ * Hours:minutes:seconds is a system Chronometer, so it ticks live every second.
  */
 object Updater {
     const val ACTION_TICK = "com.example.countdownwidget.TICK"
@@ -57,15 +57,19 @@ object Updater {
         rv.setChronometer(R.id.sec, SystemClock.elapsedRealtime() + dayPart, null, running)
         rv.setTextColor(R.id.sec, g.digitColor)
 
+        val sc = g.textScale / 100f
         val availW = wDp - 24f
         val availH = hDp - 20f
-        rv.sz(R.id.title, min(availH * 0.17f, availW / (max(g.title.length, 1) * 0.72f)).coerceIn(8f, 24f))
+        val titleSz = (min(availH * 0.17f, availW / (max(g.title.length, 1) * 0.72f)) * sc).coerceIn(8f, 26f)
+        rv.sz(R.id.title, titleSz)
 
+        val contentH: Float
         if (compact) {
-            val num = min(availW / 7.6f, availH * 0.5f).coerceIn(10f, 60f)
+            val num = (min(availW / 7.6f, availH * 0.5f) * sc).coerceIn(10f, 60f)
             rv.setTextViewText(R.id.dd, "%dd".format(remaining / DAY))
             rv.setTextColor(R.id.dd, g.digitColor)
             rv.sz(R.id.dd, num); rv.sz(R.id.sec, num)
+            contentH = titleSz * 1.25f + num * 1.25f
         } else {
             val p = Parts.of(g.target)
             rv.setTextViewText(R.id.mo, "%02d".format(p.mo))
@@ -73,16 +77,17 @@ object Updater {
             rv.setTextColor(R.id.mo, g.digitColor)
             rv.setTextColor(R.id.dd, g.digitColor)
 
-            val num = min(availW / 8.4f, availH * 0.36f).coerceIn(10f, 60f)
+            val num = (min(availW / 8.4f, availH * 0.36f) * sc).coerceIn(10f, 60f)
             val lab = (num * 0.28f).coerceIn(6f, 13f)
             for (v in intArrayOf(R.id.mo, R.id.dd, R.id.sec, R.id.c1, R.id.c2)) rv.sz(v, num)
             for (v in intArrayOf(R.id.l_mo, R.id.l_dd, R.id.l_h, R.id.l_m, R.id.l_s)) rv.sz(v, lab)
 
-            val big = hDp >= 150f                                  // tall widget: add progress bar + date
-            val vis = if (big) View.VISIBLE else View.GONE
+            // progress line + date only if you switched it on
+            val line = g.showLine && hDp >= 110f
+            val vis = if (line) View.VISIBLE else View.GONE
             rv.setViewVisibility(R.id.progress, vis)
             rv.setViewVisibility(R.id.caption, vis)
-            if (big) {
+            if (line) {
                 val total = (g.target - g.created).coerceAtLeast(1)
                 val done = ((now - g.created) * 1000 / total).toInt().coerceIn(0, 1000)
                 rv.setProgressBar(R.id.progress, 1000, done, false)
@@ -90,7 +95,13 @@ object Updater {
                     SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(g.target)))
                 rv.sz(R.id.caption, lab + 2f)
             }
+            contentH = titleSz * 1.25f + 6f + num * 1.2f + lab * 1.4f +
+                (if (line) 26f + (lab + 2f) * 1.3f else 0f)
         }
+
+        // text position: 0 = top ... 100 = bottom of the widget
+        val topDp = ((hDp - contentH) * g.textPos / 100f).coerceAtLeast(0f)
+        rv.setViewPadding(R.id.content, (10 * d).toInt(), (topDp * d).toInt(), (10 * d).toInt(), 0)
 
         rv.setViewVisibility(R.id.gear, if (hDp >= 60f) View.VISIBLE else View.GONE)
         rv.setOnClickPendingIntent(

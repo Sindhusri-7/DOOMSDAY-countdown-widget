@@ -11,11 +11,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
         setContentView(R.layout.activity_main)
-        findViewById<Button>(R.id.pin).setOnClickListener {
-            val m = AppWidgetManager.getInstance(this)
-            if (m.isRequestPinAppWidgetSupported)
-                m.requestPinAppWidget(ComponentName(this, CountdownProvider::class.java), null, null)
-            else Toast.makeText(this, "Long-press home screen > Widgets > Countdown", Toast.LENGTH_LONG).show()
-        }
+        findViewById<Button>(R.id.pin).setOnClickListener { pin(CountdownProvider::class.java) }
+        findViewById<Button>(R.id.pin_music).setOnClickListener { pin(CountdownMusicProvider::class.java) }
+    }
+
+    private fun pin(cls: Class<*>) {
+        val m = AppWidgetManager.getInstance(this)
+        if (m.isRequestPinAppWidgetSupported)
+            m.requestPinAppWidget(ComponentName(this, cls), null, null)
+        else Toast.makeText(this, "Long-press home screen > Widgets > Countdown", Toast.LENGTH_LONG).show()
     }
 }

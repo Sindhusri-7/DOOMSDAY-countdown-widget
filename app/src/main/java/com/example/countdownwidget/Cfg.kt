@@ -22,7 +22,10 @@ data class Cfg(
     val dim: Int = 25,                       // 0..80 % darkening over the background
     val digitColor: Int = 0xFFFFFFFF.toInt(),
     val sound: String? = null,               // content:// uri of chosen audio
-    val mode: Int = 0                        // 0 auto by size, 1 always boxes, 2 always one-line
+    val mode: Int = 0,                       // 0 auto by size, 1 always boxes, 2 always one-line
+    val textScale: Int = 85,                 // 50..130 % size of title + timer
+    val textPos: Int = 72,                   // 0 = top ... 100 = bottom
+    val showLine: Boolean = false            // green progress line + date under the timer
 )
 
 /** Per-widget storage (SharedPreferences, keyed by widget id). */
@@ -37,7 +40,8 @@ object Store {
             .putLong("$id.created", g.created).putInt("$id.theme", g.theme)
             .putString("$id.photo", g.photo).putInt("$id.dim", g.dim)
             .putInt("$id.color", g.digitColor).putString("$id.sound", g.sound)
-            .putInt("$id.mode", g.mode)
+            .putInt("$id.mode", g.mode).putInt("$id.tscale", g.textScale)
+            .putInt("$id.tpos", g.textPos).putBoolean("$id.line", g.showLine)
             .apply()
     }
 
@@ -48,7 +52,9 @@ object Store {
             s.getLong("$id.target", d.target), s.getLong("$id.created", d.created),
             s.getInt("$id.theme", d.theme), s.getString("$id.photo", null),
             s.getInt("$id.dim", d.dim), s.getInt("$id.color", d.digitColor),
-            s.getString("$id.sound", null), s.getInt("$id.mode", 0)
+            s.getString("$id.sound", null), s.getInt("$id.mode", 0),
+            s.getInt("$id.tscale", d.textScale), s.getInt("$id.tpos", d.textPos),
+            s.getBoolean("$id.line", d.showLine)
         )
     }
 

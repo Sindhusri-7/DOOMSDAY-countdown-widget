@@ -12,6 +12,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.TypedValue
 import android.view.View
 import android.widget.*
 import androidx.activity.result.PickVisualMediaRequest
@@ -25,30 +26,35 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.max
 
-/** Customize: title, date/time, widget style, background (poster / gradient / your picture), color, sound. */
+/** Customize: title, date/time, style, text size + position, background, color, sound. */
 class ConfigActivity : AppCompatActivity() {
     private var widgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private var g = Cfg()
     private var silent = false
+    private var autoFlow = false          // "Countdown + Music" widget: ask for picture, then music
     private lateinit var preview: ImageView
     private lateinit var sample: TextView
     private lateinit var dateBtn: Button
     private lateinit var timeBtn: Button
     private lateinit var titleEt: EditText
     private lateinit var dimBar: SeekBar
+    private lateinit var sizeBar: SeekBar
+    private lateinit var posBar: SeekBar
+    private lateinit var lineBox: CheckBox
     private lateinit var themeGroup: RadioGroup
     private lateinit var modeGroup: RadioGroup
 
-    private val pickPhoto = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        uri?.let { savePhoto(it) }
-    }
     private val pickSound = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
             try { contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
             catch (_: Exception) {}
             g = g.copy(sound = it.toString())
-            Toast.makeText(this, "Sound selected", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Music selected", Toast.LENGTH_SHORT).show()
         }
+    }
+    private val pickPhoto = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        uri?.let { savePhoto(it) }
+        if (autoFlow) { autoFlow = false; pickSound.launch(arrayOf("audio/*")) }
     }
 
     override fun onCreate(b: Bundle?) {
@@ -56,13 +62,20 @@ class ConfigActivity : AppCompatActivity() {
         setResult(RESULT_CANCELED)
         widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) { finish(); return }
+
+        val cls = AppWidgetManager.getInstance(this).getAppWidgetInfo(widgetId)?.provider?.className ?: ""
+        val isMusic = cls.endsWith("CountdownMusicProvider")
         if (Store.has(this, widgetId)) g = Store.load(this, widgetId)
+        else if (isMusic) { g = Cfg(theme = 1); autoFlow = true }
+
         setContentView(R.layout.activity_config)
         if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
 
         preview = findViewById(R.id.preview); sample = findViewById(R.id.sample)
         dateBtn = findViewById(R.id.date); timeBtn = findViewById(R.id.time)
         titleEt = findViewById(R.id.title); dimBar = findViewById(R.id.dim)
+        sizeBar = findViewById(R.id.tsize); posBar = findViewById(R.id.tpos)
+        lineBox = findViewById(R.id.show_line)
         themeGroup = findViewById(R.id.themes); modeGroup = findViewById(R.id.mode)
 
         dateBtn.setOnClickListener {
@@ -98,6 +111,10 @@ class ConfigActivity : AppCompatActivity() {
             g = g.copy(mode = when (cid) { R.id.mode_boxes -> 1; R.id.mode_line -> 2; else -> 0 })
         }
 
+        lineBox.setOnCheckedChangeListener { _, on ->
+            if (!silent) g = g.copy(showLine = on)
+        }
+
         val row = findViewById<LinearLayout>(R.id.colors)
         listOf(0xFFFFFFFF, 0xFF8BFF6A, 0xFFFFD54F, 0xFF4DD0E1).forEach { col ->
             row.addView(View(this).apply {
@@ -108,14 +125,11 @@ class ConfigActivity : AppCompatActivity() {
         }
 
         dimBar.max = 80
-        dimBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(s: SeekBar?, p: Int, u: Boolean) {
-                if (!u) return
-                g = g.copy(dim = p); refresh()
-            }
-            override fun onStartTrackingTouch(s: SeekBar?) {}
-            override fun onStopTrackingTouch(s: SeekBar?) {}
-        })
+        sizeBar.max = 80          // text size = 50 + progress  (50..130 %)
+        posBar.max = 100
+        dimBar.setOnSeekBarChangeListener(bar { p -> g = g.copy(dim = p) })
+        sizeBar.setOnSeekBarChangeListener(bar { p -> g = g.copy(textScale = 50 + p) })
+        posBar.setOnSeekBarChangeListener(bar { p -> g = g.copy(textPos = p) })
 
         findViewById<Button>(R.id.photo).setOnClickListener {
             pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -136,6 +150,17 @@ class ConfigActivity : AppCompatActivity() {
             finish()
         }
         syncViews()
+        if (autoFlow) pickPhoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+
+    /** One listener for all sliders: only reacts to the user's finger, then redraws the preview. */
+    private fun bar(onValue: (Int) -> Unit) = object : SeekBar.OnSeekBarChangeListener {
+        override fun onProgressChanged(s: SeekBar?, p: Int, u: Boolean) {
+            if (!u) return
+            onValue(p); refresh()
+        }
+        override fun onStartTrackingTouch(s: SeekBar?) {}
+        override fun onStopTrackingTouch(s: SeekBar?) {}
     }
 
     /** Push the current settings into every control. */
@@ -143,6 +168,9 @@ class ConfigActivity : AppCompatActivity() {
         silent = true
         titleEt.setText(g.title)
         dimBar.progress = g.dim
+        sizeBar.progress = (g.textScale - 50).coerceIn(0, 80)
+        posBar.progress = g.textPos
+        lineBox.isChecked = g.showLine
         if (g.photo != null) themeGroup.clearCheck()
         else for (i in 0 until themeGroup.childCount) {
             val v = themeGroup.getChildAt(i)
@@ -156,6 +184,13 @@ class ConfigActivity : AppCompatActivity() {
     private fun refresh() {
         preview.setImageBitmap(Bg.make(this, g, 700, 280))
         sample.setTextColor(g.digitColor)
+        sample.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f * g.textScale / 100f)
+        // show roughly where the text will sit in the widget
+        val frame = sample.parent as View
+        frame.post {
+            val room = (frame.height - sample.height).coerceAtLeast(0)
+            sample.translationY = room * g.textPos / 100f
+        }
         val d = Date(g.target)
         dateBtn.text = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(d)
         timeBtn.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(d)

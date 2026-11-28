@@ -28,13 +28,25 @@
         </activity>
 
         <!-- STEP 2/3: the widget -->
-        <receiver android:name=".CountdownProvider" android:exported="true">
+        <receiver android:name=".CountdownProvider" android:exported="true"
+            android:label="Doomsday Countdown">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/countdown_widget_info" />
+        </receiver>
+
+        <!-- second widget in the list: browse a picture + add music -->
+        <receiver android:name=".CountdownMusicProvider" android:exported="true"
+            android:label="Countdown + Music">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/countdown_music_widget_info" />
         </receiver>
 
         <!-- STEP 4: sound + alarm -->

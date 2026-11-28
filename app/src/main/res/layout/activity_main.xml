@@ -8,5 +8,7 @@
         android:layout_marginTop="12dp" android:gravity="center"
         android:text="Add a widget to your home screen, then customize it.\nTap the widget to play your sound."/>
     <Button android:id="@+id/pin" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="24dp" android:text="Add widget to home screen"/>
+        android:layout_marginTop="24dp" android:text="Add Doomsday widget"/>
+    <Button android:id="@+id/pin_music" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="Add widget with my picture + music"/>
 </LinearLayout>

@@ -23,7 +23,8 @@ class AlarmReceiver : BroadcastReceiver() {
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(c: Context, i: Intent) {
         val m = AppWidgetManager.getInstance(c)
-        m.getAppWidgetIds(ComponentName(c, CountdownProvider::class.java))
-            .forEach { Updater.update(c, m, it) }
+        listOf(CountdownProvider::class.java, CountdownMusicProvider::class.java).forEach { cls ->
+            m.getAppWidgetIds(ComponentName(c, cls)).forEach { Updater.update(c, m, it) }
+        }
     }
 }

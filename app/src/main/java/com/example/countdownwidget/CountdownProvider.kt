@@ -6,13 +6,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 
-class CountdownProvider : AppWidgetProvider() {
+open class CountdownProvider : AppWidgetProvider() {
 
     override fun onUpdate(c: Context, m: AppWidgetManager, ids: IntArray) {
         ids.forEach { Updater.update(c, m, it) }
     }
 
-    // Called when the user resizes the widget -> pick Small / Medium / Large
+    // Called when the user resizes the widget -> everything is re-laid out for the new size
     override fun onAppWidgetOptionsChanged(c: Context, m: AppWidgetManager, id: Int, o: Bundle?) {
         Updater.update(c, m, id)
     }
@@ -29,3 +29,6 @@ class CountdownProvider : AppWidgetProvider() {
         }
     }
 }
+
+/** Second widget in the list: same size/look, but its setup asks you to browse a picture and a music file. */
+class CountdownMusicProvider : CountdownProvider()
