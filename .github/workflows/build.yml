@@ -1,3 +1,4 @@
+@'
 name: Build APK
 on:
   push:
@@ -21,3 +22,4 @@ jobs:
         with:
           name: countdown-widget-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+'@ | Set-Content -Encoding ascii .github\workflows\build.yml
