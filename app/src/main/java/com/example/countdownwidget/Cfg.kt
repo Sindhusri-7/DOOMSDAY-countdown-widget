@@ -4,18 +4,25 @@ import android.content.Context
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
-/** Everything a single widget remembers. */
+// Avengers: Doomsday opens Dec 18 2026 (midnight US Eastern = same moment worldwide)
+private val NY: ZoneId = ZoneId.of("America/New_York")
+val DOOMSDAY_TARGET: Long = ZonedDateTime.of(2026, 12, 18, 0, 0, 0, 0, NY).toInstant().toEpochMilli()
+val DOOMSDAY_START: Long = ZonedDateTime.of(2025, 12, 18, 0, 0, 0, 0, NY).toInstant().toEpochMilli()
+
+/** Everything a single widget remembers. Defaults = the Doomsday preset. */
 data class Cfg(
     val title: String = "DOOMSDAY IS COMING",
-    val target: Long = System.currentTimeMillis() + 30L * 24 * 3600 * 1000,
-    val created: Long = System.currentTimeMillis(),
-    val theme: Int = 0,
-    val photo: String? = null,
-    val dim: Int = 40,                       // 0..80 % darkening over the background
+    val target: Long = DOOMSDAY_TARGET,
+    val created: Long = DOOMSDAY_START,      // start of the progress bar
+    val theme: Int = 0,                      // 0 = Doomsday poster picture
+    val photo: String? = null,               // user's own picture (overrides theme)
+    val dim: Int = 25,                       // 0..80 % darkening over the background
     val digitColor: Int = 0xFFFFFFFF.toInt(),
-    val sound: String? = null                // content:// uri of chosen audio, null = default alarm
+    val sound: String? = null,               // content:// uri of chosen audio
+    val mode: Int = 0                        // 0 auto by size, 1 always boxes, 2 always one-line
 )
 
 /** Per-widget storage (SharedPreferences, keyed by widget id). */
@@ -30,6 +37,7 @@ object Store {
             .putLong("$id.created", g.created).putInt("$id.theme", g.theme)
             .putString("$id.photo", g.photo).putInt("$id.dim", g.dim)
             .putInt("$id.color", g.digitColor).putString("$id.sound", g.sound)
+            .putInt("$id.mode", g.mode)
             .apply()
     }
 
@@ -38,9 +46,9 @@ object Store {
         return Cfg(
             s.getString("$id.title", d.title) ?: d.title,
             s.getLong("$id.target", d.target), s.getLong("$id.created", d.created),
-            s.getInt("$id.theme", 0), s.getString("$id.photo", null),
-            s.getInt("$id.dim", 40), s.getInt("$id.color", d.digitColor),
-            s.getString("$id.sound", null)
+            s.getInt("$id.theme", d.theme), s.getString("$id.photo", null),
+            s.getInt("$id.dim", d.dim), s.getInt("$id.color", d.digitColor),
+            s.getString("$id.sound", null), s.getInt("$id.mode", 0)
         )
     }
 
@@ -51,7 +59,7 @@ object Store {
     }
 }
 
-/** Months / days / hours / minutes / seconds left, like the "Doomsday" poster. */
+/** Months / days / hours / minutes / seconds left, like the Doomsday poster. */
 data class Parts(val mo: Long, val d: Long, val h: Long, val m: Long, val s: Long) {
     companion object {
         fun of(target: Long): Parts {

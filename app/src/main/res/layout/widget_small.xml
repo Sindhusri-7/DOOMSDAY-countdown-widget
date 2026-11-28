@@ -5,13 +5,23 @@
     <ImageView android:id="@+id/bg" android:layout_width="match_parent" android:layout_height="match_parent"
         android:scaleType="fitXY" android:contentDescription="@null"/>
 
+    <ImageButton android:id="@+id/gear" android:layout_width="22dp" android:layout_height="22dp"
+        android:layout_gravity="top|end" android:layout_margin="4dp" android:background="@null"
+        android:src="@android:drawable/ic_menu_preferences" android:contentDescription="Customize"/>
+
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
         android:orientation="vertical" android:gravity="center" android:padding="6dp">
         <TextView android:id="@+id/title" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:textColor="#FFFFFF" android:textSize="10sp" android:textStyle="bold"
-            android:letterSpacing="0.1" android:maxLines="1"/>
-        <!-- fully live H:MM:SS, ticks every second with no updates -->
-        <Chronometer android:id="@+id/live" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:textColor="#FFFFFF" android:textSize="20sp" android:textStyle="bold" android:maxLines="1"/>
+            android:textColor="#FFFFFF" android:textSize="10dp" android:textStyle="bold"
+            android:letterSpacing="0.1" android:maxLines="1" android:includeFontPadding="false"/>
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/dd" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="0d" android:textColor="#FFFFFF" android:textSize="20dp"
+                android:textStyle="bold" android:maxLines="1" android:includeFontPadding="false"/>
+            <Chronometer android:id="@+id/sec" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:textColor="#FFFFFF" android:textSize="20dp"
+                android:textStyle="bold" android:maxLines="1" android:includeFontPadding="false"/>
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

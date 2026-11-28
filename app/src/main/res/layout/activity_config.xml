@@ -12,8 +12,11 @@
             android:textSize="22sp" android:textStyle="bold"/>
     </FrameLayout>
 
+    <Button android:id="@+id/preset" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Use Doomsday preset (poster + title + release time)"/>
+
     <EditText android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:hint="Title (e.g. DOOMSDAY IS COMING)" android:inputType="textCapCharacters" android:maxLines="1"/>
+        android:hint="Title" android:inputType="textCapCharacters" android:maxLines="1"/>
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:layout_marginTop="8dp">
@@ -22,13 +25,25 @@
     </LinearLayout>
 
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginTop="12dp" android:text="Background theme" android:textStyle="bold"/>
+        android:layout_marginTop="12dp" android:text="Widget style (you can also resize the widget freely)" android:textStyle="bold"/>
+    <RadioGroup android:id="@+id/mode" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <RadioButton android:id="@+id/mode_auto" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Auto (changes with widget size)"/>
+        <RadioButton android:id="@+id/mode_boxes" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Boxes: months / days / hours:minutes:seconds"/>
+        <RadioButton android:id="@+id/mode_line" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="One line: days + live timer"/>
+    </RadioGroup>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" android:text="Background" android:textStyle="bold"/>
     <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content">
         <RadioGroup android:id="@+id/themes" android:layout_width="wrap_content"
             android:layout_height="wrap_content" android:orientation="horizontal"/>
     </HorizontalScrollView>
     <Button android:id="@+id/photo" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Use my own photo"/>
+        android:text="Browse picture from gallery"/>
 
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:layout_marginTop="8dp" android:text="Darken background" android:textStyle="bold"/>
